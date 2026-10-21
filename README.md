@@ -1,10 +1,33 @@
-# HỆ THỐNG QUẢN LÝ PHÂN PHỐI DỊCH VỤ Y TẾ SỨC KHỎE TÍCH HỢP MẠNG LƯỚI CỘNG TÁC VIÊN VÀ CƠ CHẾ ĐỐI SOÁT HOA HỒNG TỰ ĐỘNG
+<div align="center">
 
-**ĐỒ ÁN THỰC TẬP TỐT NGHIỆP ĐẠI HỌC — NGÀNH CÔNG NGHỆ THÔNG TIN**
+# MED-AFFILIATE SAAS PLATFORM
+### HỆ THỐNG QUẢN LÝ PHÂN PHỐI DỊCH VỤ Y TẾ SỨC KHỎE TÍCH HỢP MẠNG LƯỚI CỘNG TÁC VIÊN VÀ CƠ CHẾ ĐỐI SOÁT HOA HỒNG TỰ ĐỘNG
 
-*Đơn vị đào tạo: Khoa Công nghệ Thông tin — Trường Đại học An Giang (ĐHQG-HCM)*
+<br/>
 
+<a href="https://skillicons.dev">
+  <img src="https://skillicons.dev/icons?i=nestjs,nextjs,react,ts,mysql,prisma,tailwind,docker" alt="Tech Stack Icons" />
+</a>
+
+<br/><br/>
+
+**DỰ ÁN CÁ NHÂN — PERSONAL PROJECT**  
+*Tác giả / Nhà phát triển: Nguyễn Hoàng Uy*  
 *Định hướng kiến trúc: Multi-Tenant Service SaaS & Automated Affiliate Marketing Engine*
+
+<br/>
+
+[![Status](https://img.shields.io/badge/STATUS-IMPLEMENTATION--READY-brightgreen?style=for-the-badge&logo=gitbook&logoColor=white)](https://github.com/NguyenHoangUy1305/med-affiliate-saas)
+[![Architecture](https://img.shields.io/badge/ARCHITECTURE-MODULAR%20MONOLITH-blueviolet?style=for-the-badge&logo=buffer&logoColor=white)](https://github.com/NguyenHoangUy1305/med-affiliate-saas)
+[![Repository](https://img.shields.io/badge/REPOSITORY-MONOREPO-007acc?style=for-the-badge&logo=git&logoColor=white)](https://github.com/NguyenHoangUy1305/med-affiliate-saas)
+
+[![Security](https://img.shields.io/badge/SECURITY-RBAC%20%2B%20AUDIT%20LOG-e74c3c?style=for-the-badge&logo=auth0&logoColor=white)](https://github.com/NguyenHoangUy1305/med-affiliate-saas)
+[![Node.js](https://img.shields.io/badge/NODE.JS-%3E%3D20.X-27ae60?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MySQL](https://img.shields.io/badge/MYSQL-8.0-00618a?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+
+</div>
+
+---
 
 ## 📑 MỤC LỤC HỆ THỐNG
 
@@ -524,10 +547,8 @@ Sau khi khởi chạy đầy đủ các dịch vụ, bạn có thể kiểm tra 
 | **Swagger OpenAPI Docs** | `http://localhost:3001/api/docs` | Giao diện thử nghiệm trực tiếp toàn bộ API của 8 modules nghiệp vụ. | 
 | **Quản trị CSDL (Adminer/phpMyAdmin)** | `http://localhost:8080` | Kiểm tra trực quan dữ liệu nhảy trong bảng `orders`, `wallets` và `wallet_transactions` sau khi bấm duyệt khám. | 
 
-**ĐỒ ÁN TỐT NGHIỆP ĐẠI HỌC — KHOA CÔNG NGHỆ THÔNG TIN — TRƯỜNG ĐẠI HỌC AN GIANG (ĐHQG-HCM)**
+**DỰ ÁN CÁ NHÂN — NỀN TẢNG MED-AFFILIATE SAAS**
 
-*Sinh viên thực hiện: Nguyễn Hoàng Uy (MSSV: DTH235812 — Lớp: DH24TH3)*
-
-*Giảng viên định hướng chuyên môn: TS. Huỳnh Phước Hải*
+*Tác giả / Nhà phát triển: Nguyễn Hoàng Uy*
 
 *Bản quyền tài liệu và mã nguồn thuộc về Tác giả © 2026.*
