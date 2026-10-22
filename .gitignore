@@ -152,3 +152,8 @@ vite.config.ts.timestamp-*
 *.xls
 *.xlsx
 
+# Private local documentation and roadmap tracking
+TIEN_DO_30_NGAY.md
+docs/
+
+
