@@ -525,7 +525,24 @@ async function main() {
     return !excludedNormalized.includes(norm);
   });
 
-  console.log(`   => Tổng sinh viên sau khi loại trừ 14 nhân sự cốt lõi: ${eligibleStudents.length} bạn.`);
+  if (eligibleStudents.length === 0) {
+    console.log('   [INFO] Không tìm thấy file XLS, tự động sử dụng danh sách sinh viên mẫu dự phòng...');
+    const fallbackList: ParsedStudent[] = [
+      { mssv: 'DTH235801', hoLot: 'Nguyễn Văn', ten: 'An', fullName: 'Nguyễn Văn An', maLop: 'DH24TH1', sdt: '0981235801', email: 'dth235801@agu.edu.vn' },
+      { mssv: 'DTH235802', hoLot: 'Trần Thị', ten: 'Bình', fullName: 'Trần Thị Bình', maLop: 'DH24TH1', sdt: '0981235802', email: 'dth235802@agu.edu.vn' },
+      { mssv: 'DTH235803', hoLot: 'Lê Hoàng', ten: 'Cường', fullName: 'Lê Hoàng Cường', maLop: 'DH24TH1', sdt: '0981235803', email: 'dth235803@agu.edu.vn' },
+      { mssv: 'DTH235804', hoLot: 'Phạm Minh', ten: 'Đức', fullName: 'Phạm Minh Đức', maLop: 'DH24TH2', sdt: '0981235804', email: 'dth235804@agu.edu.vn' },
+      { mssv: 'DTH235805', hoLot: 'Huỳnh Ngọc', ten: 'Giang', fullName: 'Huỳnh Ngọc Giang', maLop: 'DH24TH2', sdt: '0981235805', email: 'dth235805@agu.edu.vn' },
+      { mssv: 'DTH235806', hoLot: 'Đỗ Quốc', ten: 'Huy', fullName: 'Đỗ Quốc Huy', maLop: 'DH24TH2', sdt: '0981235806', email: 'dth235806@agu.edu.vn' },
+      { mssv: 'DTH235807', hoLot: 'Vũ Thanh', ten: 'Lâm', fullName: 'Vũ Thanh Lâm', maLop: 'DH24TH3', sdt: '0981235807', email: 'dth235807@agu.edu.vn' },
+      { mssv: 'DTH235808', hoLot: 'Bùi Ánh', ten: 'Mai', fullName: 'Bùi Ánh Mai', maLop: 'DH24TH3', sdt: '0981235808', email: 'dth235808@agu.edu.vn' },
+      { mssv: 'DTH235809', hoLot: 'Đặng Kim', ten: 'Ngân', fullName: 'Đặng Kim Ngân', maLop: 'DH24TH3', sdt: '0981235809', email: 'dth235809@agu.edu.vn' },
+      { mssv: 'DTH235810', hoLot: 'Ngô Hải', ten: 'Phát', fullName: 'Ngô Hải Phát', maLop: 'DH24TH3', sdt: '0981235810', email: 'dth235810@agu.edu.vn' },
+    ];
+    eligibleStudents.push(...fallbackList);
+  }
+
+  console.log(`   => Tổng sinh viên sẵn sàng nạp: ${eligibleStudents.length} bạn.`);
 
   // Seed các sinh viên này thành User role CUSTOMER
   console.log('   => Tạo tài khoản CUSTOMER cho sinh viên...');
