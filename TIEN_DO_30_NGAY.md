@@ -8,8 +8,8 @@
 
 ## 📊 DASHBOARD TIẾN ĐỘ TỔNG QUAN
 
-- **Trạng thái:** 🚀 Đang khởi động (Tuần 1: Nền tảng & CSDL)
-- **Tiến độ tổng thể:** `[■□□□□□□□□□] 3% (1/30 Ngày)`
+- **Trạng thái:** 🚀 Đang bứt tốc (Tuần 1: Nền tảng & CSDL)
+- **Tiến độ tổng thể:** `[■■■□□□□□□□] 10% (3/30 Ngày)`
 - **Nhánh Git làm việc hàng ngày:** `dev` (Sau mỗi ngày commit: `feat(...)` hoặc `docs(...)`)
 - **Nhánh Release bảo vệ:** `main` (Chỉ merge khi hoàn thành mốc tuần)
 
@@ -33,35 +33,37 @@
 - [x] Tạo file `frontend/.env.local` với `NEXT_PUBLIC_API_BASE_URL="http://localhost:3001/api/v1"`.
 - [x] Tạo file `backend/.env.example` và `frontend/.env.example`.
 - [x] Tạo file `infrastructure/docker-compose.yml` để chạy MySQL 8.0 & Adminer (hoặc dùng MySQL XAMPP).
-- [ ] Khởi động lại: Đảm bảo `localhost:3000` mở ra Next.js (Frontend), `localhost:3001` mở ra NestJS (Backend).
+- [x] Khởi động lại: Đảm bảo `localhost:3000` mở ra Next.js (Frontend), `localhost:3001` mở ra NestJS (Backend).
 
-#### 📍 Ngày 02: Thiết kế Schema Cơ sở Dữ liệu Prisma ORM (8 Bảng Cốt lõi)
-- [ ] Cài đặt Prisma vào Backend: `npm install @prisma/client` và `npm install -D prisma`.
-- [ ] Khởi tạo Prisma: `npx prisma init`.
-- [ ] Định nghĩa các model trong `backend/prisma/schema.prisma`:
+#### 📍 Ngày 02: Thiết kế Schema Cơ sở Dữ liệu Prisma ORM (9 Bảng Cốt lõi)
+- [x] Cài đặt Prisma vào Backend: `@prisma/client` và `prisma` (v6.19.3 Stable).
+- [x] Khởi tạo cấu hình Prisma schema kết nối MySQL 8.0.
+- [x] Định nghĩa các model cốt lõi trong `backend/prisma/schema.prisma`:
   - `Tenant` (Chi nhánh phòng khám: Long Xuyên, Châu Đốc...).
   - `User` (5 Roles: SUPER_ADMIN, BRANCH_RECEPTIONIST, INTERNAL_STAFF, AFFILIATE_PARTNER, CUSTOMER).
   - `MedicalPackage` (Danh mục gói khám y tế).
   - `CommissionTier` (Bậc hoa hồng lũy tiến theo số lượng đơn trong tháng).
-- [ ] Định nghĩa tiếp các model giao dịch:
+- [x] Định nghĩa tiếp các model giao dịch & tài chính:
   - `Voucher` (Mã giảm giá, liên kết User sở hữu, số lần dùng, hạn dùng).
   - `Order` (Đơn đặt khám: mã phiếu khám, tenant_id, package_id, affiliate_user_id, status, tổng tiền).
   - `Wallet` (Ví điện tử của CTV/Nhân viên: số dư khả dụng, số dư tạm giữ).
   - `WalletTransaction` (Sổ cái biến động số dư: nổ hoa hồng, xoay vòng mua gói, rút tiền).
-- [ ] Chạy migration lần đầu: `npx prisma migrate dev --name init_schema`.
+  - `WithdrawalRequest` (Lệnh yêu cầu rút tiền về ngân hàng của CTV).
+- [x] Chạy migration lần đầu thành công: `npx prisma migrate dev --name init_med_affiliate_schema`.
 
 #### 📍 Ngày 03: Viết Script Bơm Dữ liệu Mẫu (Seed Data) Phục vụ Kiểm thử
-- [ ] Viết file `backend/prisma/seed.ts`:
-  - Tạo 2 Chi nhánh: *Phòng khám Đa khoa Long Xuyên* và *Chi nhánh Châu Đốc*.
-  - Tạo 4 tài khoản thử nghiệm băm mật khẩu bằng `bcrypt`:
-    - Admin: `admin@medsaas.vn`
-    - Lễ tân: `letan.lx@medsaas.vn`
-    - CTV: `tin.ctv@agu.edu.vn`
-    - Nhân viên: `nhanvien.lx@medsaas.vn`
-  - Tạo 3 Gói khám mẫu (Khám sức khỏe SV AGU, Tầm soát tổng quát, Khám tim mạch chuyên sâu).
-  - Cấu hình các bậc hoa hồng mẫu: Bậc 1 (1-5 đơn: 10%), Bậc 2 (6-15 đơn: 12%), Bậc 3 (>15 đơn: 15%).
-- [ ] Cấu hình `package.json` backend để gọi `ts-node prisma/seed.ts`.
-- [ ] Chạy `npx prisma db seed` và kiểm tra dữ liệu bằng Prisma Studio (`npx prisma studio`).
+- [x] Cài đặt `bcrypt` và `@types/bcrypt` phục vụ mã hóa mật khẩu đăng nhập an toàn (`MedSaas@2026`).
+- [x] Khởi tạo 8 Chi nhánh Y tế (Tenants) thực tế tại tỉnh An Giang: BV Đa khoa Trung tâm An Giang, BV Châu Đốc, PK Hạnh Phúc, PK Sài Gòn An Giang, BV Tân Châu, TTYT Thoại Sơn, TTYT Chợ Mới, TTYT Tri Tôn.
+- [x] Khởi tạo 8 Gói khám sức khỏe & tầm soát chuyên sâu: Gói SV AGU (199k), Gói cột sống IT/Văn phòng (250k), Khám lái xe (299k), Tổng quát tiêu chuẩn (590k), Tim mạch (890k), Tiêu hóa/Viêm gan (750k), Người cao tuổi (1.350k), Tầm soát ung thư (1.600k).
+- [x] Cấu hình 3 Bậc hoa hồng đa cấp: Bậc 1 Đồng (10%), Bậc 2 Bạc (12%), Bậc 3 Vàng (15%).
+- [x] Khởi tạo 14 Tài khoản nhân sự cốt lõi:
+  - Admin: `nguyenhoanguy@medsaas.vn`
+  - Lễ tân: `tranquangtoan@medsaas.vn` (BV Đa khoa TT An Giang), `tanguyenthanhtin@medsaas.vn` (BV Đa khoa KV Châu Đốc)
+  - CTV hàng đầu (kèm Ví hoa hồng & Voucher): `thaivinhnghi@medsaas.vn` (Mã: NGHI10), `trandangkhoa@medsaas.vn` (Mã: KHOA10), `vovanty@medsaas.vn` (Mã: TY10)
+  - Nhân viên nội bộ (8 tài khoản): Phó Bảo Phong, Võ Hoàng Quân, Nguyễn Văn Trọng Phúc, Nguyễn Văn Chí Hạo, Trương Trung Kiên, Nguyễn Ngọc Tài, Lê Đăng Khoa, Tạ Hồng Quân.
+- [x] Đọc và bóc tách dữ liệu từ 3 file danh sách sinh viên CNTT AGU (`th1.xls`, `th2.xls`, `th3.xls`), tự động loại trừ 14 nhân sự cốt lõi ở trên để tạo 165 tài khoản khách hàng sinh viên đặt lịch.
+- [x] Mô phỏng 75 Đơn hàng thực tế trong 30 ngày qua (72% COMPLETED, 18.6% PENDING lễ tân check-in, 9.3% CANCELLED) và ghi nhận biến động ví hoa hồng (`WalletTransaction`), tạo 3 yêu cầu rút tiền mẫu.
+- [x] Cấu hình `package.json` backend (`prisma.seed`) và thực thi thành công: `npx prisma db seed`.
 
 #### 📍 Ngày 04: Xây dựng Module Prisma & Cấu hình Toàn cục Backend (NestJS)
 - [ ] Cài đặt các gói tiện ích: `@nestjs/config`, `class-validator`, `class-transformer`, `@nestjs/swagger`.
