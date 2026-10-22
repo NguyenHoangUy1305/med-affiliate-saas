@@ -9,7 +9,7 @@
 ## 📊 DASHBOARD TIẾN ĐỘ TỔNG QUAN
 
 - **Trạng thái:** 🚀 Đang khởi động (Tuần 1: Nền tảng & CSDL)
-- **Tiến độ tổng thể:** `[■□□□□□□□□□] 3% (1/30 Ngày)`
+- **Tiến độ tổng thể:** `[■■□□□□□□□□] 7% (2/30 Ngày)`
 - **Nhánh Git làm việc hàng ngày:** `dev` (Sau mỗi ngày commit: `feat(...)` hoặc `docs(...)`)
 - **Nhánh Release bảo vệ:** `main` (Chỉ merge khi hoàn thành mốc tuần)
 
@@ -33,22 +33,23 @@
 - [x] Tạo file `frontend/.env.local` với `NEXT_PUBLIC_API_BASE_URL="http://localhost:3001/api/v1"`.
 - [x] Tạo file `backend/.env.example` và `frontend/.env.example`.
 - [x] Tạo file `infrastructure/docker-compose.yml` để chạy MySQL 8.0 & Adminer (hoặc dùng MySQL XAMPP).
-- [ ] Khởi động lại: Đảm bảo `localhost:3000` mở ra Next.js (Frontend), `localhost:3001` mở ra NestJS (Backend).
+- [x] Khởi động lại: Đảm bảo `localhost:3000` mở ra Next.js (Frontend), `localhost:3001` mở ra NestJS (Backend).
 
-#### 📍 Ngày 02: Thiết kế Schema Cơ sở Dữ liệu Prisma ORM (8 Bảng Cốt lõi)
-- [ ] Cài đặt Prisma vào Backend: `npm install @prisma/client` và `npm install -D prisma`.
-- [ ] Khởi tạo Prisma: `npx prisma init`.
-- [ ] Định nghĩa các model trong `backend/prisma/schema.prisma`:
+#### 📍 Ngày 02: Thiết kế Schema Cơ sở Dữ liệu Prisma ORM (9 Bảng Cốt lõi)
+- [x] Cài đặt Prisma vào Backend: `@prisma/client` và `prisma` (v6.19.3 Stable).
+- [x] Khởi tạo cấu hình Prisma schema kết nối MySQL 8.0.
+- [x] Định nghĩa các model cốt lõi trong `backend/prisma/schema.prisma`:
   - `Tenant` (Chi nhánh phòng khám: Long Xuyên, Châu Đốc...).
   - `User` (5 Roles: SUPER_ADMIN, BRANCH_RECEPTIONIST, INTERNAL_STAFF, AFFILIATE_PARTNER, CUSTOMER).
   - `MedicalPackage` (Danh mục gói khám y tế).
   - `CommissionTier` (Bậc hoa hồng lũy tiến theo số lượng đơn trong tháng).
-- [ ] Định nghĩa tiếp các model giao dịch:
+- [x] Định nghĩa tiếp các model giao dịch & tài chính:
   - `Voucher` (Mã giảm giá, liên kết User sở hữu, số lần dùng, hạn dùng).
   - `Order` (Đơn đặt khám: mã phiếu khám, tenant_id, package_id, affiliate_user_id, status, tổng tiền).
   - `Wallet` (Ví điện tử của CTV/Nhân viên: số dư khả dụng, số dư tạm giữ).
   - `WalletTransaction` (Sổ cái biến động số dư: nổ hoa hồng, xoay vòng mua gói, rút tiền).
-- [ ] Chạy migration lần đầu: `npx prisma migrate dev --name init_schema`.
+  - `WithdrawalRequest` (Lệnh yêu cầu rút tiền về ngân hàng của CTV).
+- [x] Chạy migration lần đầu thành công: `npx prisma migrate dev --name init_med_affiliate_schema`.
 
 #### 📍 Ngày 03: Viết Script Bơm Dữ liệu Mẫu (Seed Data) Phục vụ Kiểm thử
 - [ ] Viết file `backend/prisma/seed.ts`:

@@ -1,0 +1,236 @@
+// 1. Cấu hình Generator & Datasource
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 2. Định nghĩa các Enum chuẩn hóa
+enum Role {
+  SUPER_ADMIN
+  BRANCH_RECEPTIONIST
+  INTERNAL_STAFF
+  AFFILIATE_PARTNER
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum TransactionType {
+  COMMISSION_PAYOUT   // Nổ hoa hồng từ đơn hoàn tất
+  WITHDRAWAL          // Rút tiền về ngân hàng
+  PACKAGE_REINVEST    // Dùng tiền ví mua trực tiếp gói khám mới
+  REFUND              // Hoàn tiền (nếu lệnh rút bị từ chối)
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentMethod {
+  AT_COUNTER   // Thanh toán tại quầy lễ tân
+  WALLET       // Trừ số dư ví CTV
+  VIETQR       // Quét mã VietQR ngân hàng
+}
+
+enum TargetAudience {
+  ALL
+  STUDENT_ONLY
+}
+
+// 3. Khai báo 9 Bảng CSDL (Models)
+
+model Tenant {
+  id        String   @id @default(uuid())
+  code      String   @unique @db.VarChar(20)
+  name      String   @db.VarChar(255)
+  address   String   @db.VarChar(500)
+  phone     String   @db.VarChar(20)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Quan hệ
+  users  User[]
+  orders Order[]
+
+  @@map("tenants")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  tenantId     String?  @map("tenant_id")
+  email        String   @unique @db.VarChar(191)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  fullName     String   @map("full_name") @db.VarChar(255)
+  phone        String   @db.VarChar(20)
+  role         Role     @default(CUSTOMER)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Quan hệ
+  tenant             Tenant?             @relation(fields: [tenantId], references: [id])
+  wallet             Wallet?
+  vouchers           Voucher[]           @relation("AffiliateVouchers")
+  affiliateOrders    Order[]             @relation("AffiliateOrders")
+  confirmedOrders    Order[]             @relation("ReceptionConfirmedOrders")
+  withdrawalRequests WithdrawalRequest[]
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+model MedicalPackage {
+  id             String         @id @default(uuid())
+  code           String         @unique @db.VarChar(50)
+  name           String         @db.VarChar(255)
+  slug           String         @unique @db.VarChar(255)
+  originalPrice  Decimal        @map("original_price") @db.Decimal(12, 2)
+  price          Decimal        @db.Decimal(12, 2)
+  description    String?        @db.Text
+  details        Json?          // Lưu danh mục các xét nghiệm/siêu âm trong gói
+  targetAudience TargetAudience @default(ALL) @map("target_audience")
+  isActive       Boolean        @default(true) @map("is_active")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@map("medical_packages")
+}
+
+model CommissionTier {
+  id             String  @id @default(uuid())
+  tierLevel      Int     @unique @map("tier_level")
+  name           String  @db.VarChar(100)
+  minOrders      Int     @map("min_orders")
+  maxOrders      Int?    @map("max_orders") // null = không giới hạn trên
+  commissionRate Decimal @map("commission_rate") @db.Decimal(5, 4) // Ví dụ: 0.1000 = 10%
+
+  @@map("commission_tiers")
+}
+
+model Voucher {
+  id              String    @id @default(uuid())
+  affiliateUserId String    @map("affiliate_user_id")
+  code            String    @unique @db.VarChar(50)
+  discountValue   Decimal   @map("discount_value") @db.Decimal(12, 2)
+  maxUsage        Int       @default(100) @map("max_usage")
+  usedCount       Int       @default(0) @map("used_count")
+  expiryDate      DateTime? @map("expiry_date")
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  affiliateUser User    @relation("AffiliateVouchers", fields: [affiliateUserId], references: [id])
+  orders        Order[]
+
+  @@index([affiliateUserId])
+  @@map("vouchers")
+}
+
+model Order {
+  id                String           @id @default(uuid())
+  bookingCode       String           @unique @map("booking_code") @db.VarChar(30)
+  tenantId          String           @map("tenant_id")
+  packageId         String           @map("package_id")
+  affiliateUserId   String?          @map("affiliate_user_id")
+  voucherId         String?          @map("voucher_id")
+  confirmedByUserId String?          @map("confirmed_by_user_id")
+  
+  patientName       String           @map("patient_name") @db.VarChar(255)
+  patientPhone      String           @map("patient_phone") @db.VarChar(20)
+  patientEmail      String?          @map("patient_email") @db.VarChar(191)
+  appointmentDate   DateTime         @map("appointment_date")
+  
+  totalAmount       Decimal          @map("total_amount") @db.Decimal(12, 2)
+  discountAmount    Decimal          @default(0.00) @map("discount_amount") @db.Decimal(12, 2)
+  commissionAmount  Decimal          @default(0.00) @map("commission_amount") @db.Decimal(12, 2)
+  
+  status            OrderStatus      @default(PENDING)
+  commissionStatus  CommissionStatus @default(PENDING) @map("commission_status")
+  paymentMethod     PaymentMethod    @default(AT_COUNTER) @map("payment_method")
+  
+  completedAt       DateTime?        @map("completed_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Quan hệ
+  tenant        Tenant          @relation(fields: [tenantId], references: [id])
+  package       MedicalPackage  @relation(fields: [packageId], references: [id])
+  affiliateUser User?           @relation("AffiliateOrders", fields: [affiliateUserId], references: [id])
+  voucher       Voucher?        @relation(fields: [voucherId], references: [id])
+  confirmedBy   User?           @relation("ReceptionConfirmedOrders", fields: [confirmedByUserId], references: [id])
+
+  @@index([bookingCode])
+  @@index([patientPhone])
+  @@index([tenantId])
+  @@index([affiliateUserId])
+  @@map("orders")
+}
+
+model Wallet {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  balance       Decimal  @default(0.00) @db.Decimal(15, 2)
+  lockedBalance Decimal  @default(0.00) @map("locked_balance") @db.Decimal(15, 2)
+  totalEarned   Decimal  @default(0.00) @map("total_earned") @db.Decimal(15, 2)
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id            String          @id @default(uuid())
+  walletId      String          @map("wallet_id")
+  amount        Decimal         @db.Decimal(15, 2) // Dương là vào, Âm là ra
+  balanceBefore Decimal         @map("balance_before") @db.Decimal(15, 2)
+  balanceAfter  Decimal         @map("balance_after") @db.Decimal(15, 2)
+  type          TransactionType
+  referenceId   String?         @map("reference_id") @db.VarChar(100)
+  note          String?         @db.VarChar(500)
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@map("wallet_transactions")
+}
+
+model WithdrawalRequest {
+  id              String           @id @default(uuid())
+  userId          String           @map("user_id")
+  amount          Decimal          @db.Decimal(15, 2)
+  bankName        String           @map("bank_name") @db.VarChar(100)
+  accountNumber   String           @map("account_number") @db.VarChar(50)
+  accountHolder   String           @map("account_holder") @db.VarChar(255)
+  status          WithdrawalStatus @default(PENDING)
+  adminNote       String?          @map("admin_note") @db.VarChar(500)
+  transactionCode String?          @map("transaction_code") @db.VarChar(100)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("withdrawal_requests")
+}
