@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { MedicalPackagesModule } from './medical-packages/medical-packages.module';
+import { AffiliateModule } from './affiliate/affiliate.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -20,6 +21,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     AuthModule,
     TenantsModule,
     MedicalPackagesModule,
+    AffiliateModule,
     ObserveModule.forRoot({
       appKey: process.env.OBSERVE_APP_KEY ?? 'YOUR_APP_KEY',
       appSecret: process.env.OBSERVE_APP_SECRET ?? 'YOUR_APP_SECRET',
