@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -9,6 +10,7 @@ import { Prisma } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
+import { ValidateVoucherDto } from './dto/validate-voucher.dto';
 
 @Injectable()
 export class AffiliateService {
@@ -138,6 +140,132 @@ export class AffiliateService {
       affiliatePartner: {
         id: voucher.affiliateUser.id,
         name: voucher.affiliateUser.fullName,
+      },
+    };
+  }
+
+  /**
+   * Cơ chế Chống Gian lận (Anti-Fraud Engine):
+   * Xác thực mã giảm giá, kiểm tra thời hạn, lượt dùng, chống tự giới thiệu (Self-referral) và điều kiện sinh viên AGU.
+   */
+  async validateVoucher(dto: ValidateVoucherDto) {
+    const normalizedCode = dto.voucherCode.toUpperCase().trim();
+    const normalizedPhone = dto.customerPhone.trim();
+    const normalizedEmail = dto.customerEmail?.toLowerCase().trim();
+
+    // 1. Kiểm tra tồn tại Voucher
+    const voucher = await this.prisma.voucher.findUnique({
+      where: { code: normalizedCode },
+      include: {
+        affiliateUser: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!voucher) {
+      throw new NotFoundException(`Mã giảm giá [${normalizedCode}] không tồn tại.`);
+    }
+
+    // 2. Kiểm tra trạng thái hoạt động của Voucher
+    if (!voucher.isActive) {
+      throw new BadRequestException(`Mã giảm giá [${normalizedCode}] hiện đang tạm ngưng áp dụng.`);
+    }
+
+    // 3. Kiểm tra hạn sử dụng
+    if (voucher.expiryDate && new Date() > voucher.expiryDate) {
+      throw new BadRequestException(
+        `Mã giảm giá [${normalizedCode}] đã hết hạn sử dụng vào ngày ${voucher.expiryDate.toISOString().split('T')[0]}.`,
+      );
+    }
+
+    // 4. Kiểm tra giới hạn số lượt sử dụng
+    if (voucher.usedCount >= voucher.maxUsage) {
+      throw new BadRequestException(
+        `Mã giảm giá [${normalizedCode}] đã đạt giới hạn sử dụng tối đa (${voucher.maxUsage}/${voucher.maxUsage} lượt).`,
+      );
+    }
+
+    // 5. Kiểm tra phòng chống Tự giới thiệu (Self-referral Prevention)
+    // CTV không được dùng chính voucher của mình để đặt khám hưởng hoa hồng
+    const affiliatePhone = voucher.affiliateUser.phone?.trim();
+    const affiliateEmail = voucher.affiliateUser.email?.toLowerCase().trim();
+
+    if (
+      normalizedPhone === affiliatePhone ||
+      (normalizedEmail && affiliateEmail && normalizedEmail === affiliateEmail)
+    ) {
+      this.logger.warn(
+        `🚨 Phát hiện gian lận Self-referral: Người đặt khám [Phone: ${normalizedPhone}, Email: ${normalizedEmail}] trùng với CTV sở hữu voucher [${voucher.code}]!`,
+      );
+      throw new BadRequestException(
+        `Chính sách chống gian lận: Bạn không thể áp dụng mã giới thiệu của chính mình để trục lợi hoa hồng!`,
+      );
+    }
+
+    // 6. Kiểm tra gói khám y tế tương ứng
+    const medicalPackage = await this.prisma.medicalPackage.findUnique({
+      where: { id: dto.packageId },
+    });
+
+    if (!medicalPackage) {
+      throw new NotFoundException(`Gói khám y tế không tồn tại.`);
+    }
+
+    if (!medicalPackage.isActive) {
+      throw new BadRequestException(`Gói khám [${medicalPackage.name}] hiện đang tạm ngưng nhận đặt hẹn.`);
+    }
+
+    // 7. Kiểm tra đối tượng thụ hưởng (Target Audience): Sinh viên AGU
+    if (medicalPackage.targetAudience === 'STUDENT_ONLY') {
+      if (!normalizedEmail || !normalizedEmail.endsWith('@agu.edu.vn')) {
+        this.logger.warn(
+          `🚫 Từ chối kích hoạt gói sinh viên: Email [${normalizedEmail || 'N/A'}] không thuộc tên miền trường @agu.edu.vn`,
+        );
+        throw new BadRequestException(
+          `Gói khám [${medicalPackage.name}] là gói ưu đãi đặc quyền dành riêng cho sinh viên Đại học An Giang. Vui lòng cung cấp email sinh viên hợp lệ (@agu.edu.vn) để xác thực ưu đãi!`,
+        );
+      }
+    }
+
+    // 8. Tính toán mức chiết khấu và tổng tiền sau giảm giá
+    const packagePrice = Number(medicalPackage.price);
+    const voucherDiscount = Number(voucher.discountValue);
+    const discountAmount = Math.min(voucherDiscount, packagePrice);
+    const finalAmount = Math.max(0, packagePrice - discountAmount);
+
+    this.logger.log(
+      `✅ Xác thực voucher [${voucher.code}] thành công cho khách hàng [${normalizedPhone}]. Giảm: ${discountAmount}đ, Thanh toán: ${finalAmount}đ`,
+    );
+
+    return {
+      valid: true,
+      message: `Áp dụng mã giảm giá [${voucher.code}] thành công!`,
+      voucher: {
+        id: voucher.id,
+        code: voucher.code,
+        discountValue: voucherDiscount,
+        affiliatePartner: {
+          id: voucher.affiliateUser.id,
+          name: voucher.affiliateUser.fullName,
+        },
+      },
+      package: {
+        id: medicalPackage.id,
+        name: medicalPackage.name,
+        targetAudience: medicalPackage.targetAudience,
+        originalPrice: Number(medicalPackage.originalPrice),
+        price: packagePrice,
+      },
+      pricing: {
+        packagePrice,
+        discountAmount,
+        finalAmount,
       },
     };
   }

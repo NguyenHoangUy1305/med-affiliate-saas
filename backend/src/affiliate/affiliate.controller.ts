@@ -12,6 +12,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { AffiliateService } from './affiliate.service';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
+import { ValidateVoucherDto } from './dto/validate-voucher.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -45,6 +46,24 @@ export class AffiliateController {
   @ApiResponse({ status: 200, description: 'Lấy danh sách chiến dịch thành công' })
   async getMyCampaigns(@CurrentUser('id') userId: string) {
     return this.affiliateService.getMyCampaigns(userId);
+  }
+
+  @Post('validate-voucher')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Xác thực Voucher & Động cơ Chống Gian lận (Anti-Fraud Engine)',
+    description:
+      'Kiểm tra mã giảm giá, thời hạn, giới hạn lượt dùng, chống tự giới thiệu (Self-referral) và điều kiện sinh viên AGU trước khi tạo phiếu đặt khám.',
+  })
+  @ApiResponse({ status: 200, description: 'Voucher hợp lệ, trả về số tiền chiết khấu' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Voucher tạm ngưng, hết hạn, hết lượt, vi phạm Self-referral, hoặc thiếu email @agu.edu.vn',
+  })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy voucher hoặc gói khám' })
+  async validateVoucher(@Body() dto: ValidateVoucherDto) {
+    return this.affiliateService.validateVoucher(dto);
   }
 
   @Get('voucher/:code')
