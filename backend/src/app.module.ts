@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { MedicalPackagesModule } from './medical-packages/medical-packages.module';
 import { AffiliateModule } from './affiliate/affiliate.module';
+import { OrdersModule } from './orders/orders.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -22,6 +23,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     TenantsModule,
     MedicalPackagesModule,
     AffiliateModule,
+    OrdersModule,
     ObserveModule.forRoot({
       appKey: process.env.OBSERVE_APP_KEY ?? 'YOUR_APP_KEY',
       appSecret: process.env.OBSERVE_APP_SECRET ?? 'YOUR_APP_SECRET',
